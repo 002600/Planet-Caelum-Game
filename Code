@@ -117,3 +117,60 @@ class World:
             self._place_random_item("part")
         for _ in range(5):
             self._place_random_item("scrap")
+
+def _place_random_item(self, item):
+        for attempt in range(200):
+            x = random.randint(0, self.w-1)
+            y = random.randint(0, self.h-1)
+            tile = self.grid[y][x]
+            if tile.kind != "rock" and tile.kind != "ship":
+                tile.items.append(item)
+                return True
+        return False
+
+    def spawn_monsters(self):
+        for _ in range(NUM_MONSTERS):
+            for attempt in range(200):
+                x = random.randint(0, self.w-1)
+                y = random.randint(0, self.h-1)
+                tile = self.grid[y][x]
+                if (x,y) != self.ship_coords and tile.kind != "rock" and (self.player is None or (x,y) != (self.player.x,self.player.y)):
+                    m = Monster(x,y, level=random.choice([1,1,2]))
+                    tile.monster = m
+                    self.monsters.append(m)
+                    break
+
+    def display_map(self, reveal_player=True, radius=3):
+        lines = []
+        for y in range(self.h):
+            row = ""
+            for x in range(self.w):
+                if reveal_player and (x,y) == (self.player.x,self.player.y):
+                    row += SYMBOLS["player"]
+                else:
+                    dx = abs(x - self.player.x)
+                    dy = abs(y - self.player.y)
+                    if dx <= radius and dy <= radius:
+                        row += self.grid[y][x].symbol()
+                    else:
+                        row += " "
+                row += " "
+            lines.append(row)
+        return "\n".join(lines)
+
+    def move_monsters(self):
+        for m in list(self.monsters):
+            if not m.alive:
+                continue
+            if random.random() < 0.6:
+                dx = self.player.x - m.x
+                dy = self.player.y - m.y
+                if abs(dx) > abs(dy):
+                    m.x += 1 if dx>0 else -1 if dx<0 else 0
+                else:
+                    m.y += 1 if dy>0 else -1 if dy<0 else 0
+            else:
+                m.x += random.choice([-1,0,1])
+                m.y += random.choice([-1,0,1])
+            # clamp
+            m.x = max(0, min(self.w-1, m.x))
