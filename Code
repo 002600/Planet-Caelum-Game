@@ -1,0 +1,66 @@
+import random
+import textwrap
+import sys
+import time
+
+MAP_WIDTH = 15
+MAP_HEIGHT = 11
+NUM_MONSTERS = 6
+NUM_SHIP_PARTS = 4
+NUM_FOOD = 12
+NUM_WATER = 10
+MAX_TURNS = 500  
+
+SYMBOLS = {
+    "empty": ".",
+    "rock": "^",
+    "water": "~",
+    "food": "f",
+    "part": "P",
+    "player": "@",
+    "monster": "M",
+    "ship": "S",
+}
+
+class Tile:
+    def __init__(self, kind="empty"):
+        self.kind = kind
+        self.monster = None
+        self.items = []  
+        self.hazard = False  
+
+    def symbol(self):
+        if self.monster:
+            return SYMBOLS["monster"]
+        if self.items:
+        
+            if "part" in self.items:
+                return SYMBOLS["part"]
+            if "food" in self.items:
+                return SYMBOLS["food"]
+            if "water" in self.items:
+                return SYMBOLS["water"]
+        if self.kind == "rock":
+            return SYMBOLS["rock"]
+        if self.kind == "waterpool":
+            return SYMBOLS["water"]
+        return SYMBOLS["empty"]
+
+class Player:
+    def __init__(self, x, y):
+        self.name = "Milo"
+        self.x = x
+        self.y = y
+        self.health = 100
+        self.hunger = 100
+        self.thirst = 100
+        self.inventory = {"food":0,"water":0,"part":0,"scrap":0}
+        self.aura = "orange-pink"
+        self.age_appearance = "childlike"
+        self.moves = 0
+
+    def status(self):
+        return f"HP:{self.health}  Hunger:{self.hunger}  Thirst:{self.thirst}  Parts:{self.inventory['part']}  Food:{self.inventory['food']}  Water:{self.inventory['water']}"
+
+class Monster:
+    
