@@ -292,3 +292,97 @@ if p.thirst <= 0:
             self.fight(tile.monster)
 
     def scavenge(self):
+p = self.world.player
+        tile = self.world.tile_at(p.x,p.y)
+        if not tile.items:
+            if random.random() < 0.25:
+                found = random.choice(["scrap","food","water"])
+                tile.items.append(found)
+            else:
+                print("You scour the area but find nothing.")
+                return
+        item = tile.items.pop(0)
+        if item == "food":
+            p.inventory["food"] += 1
+            p.hunger = min(100, p.hunger + 30)
+            print("You found food! Hunger +30")
+        elif item == "water":
+            p.inventory["water"] += 1
+            p.thirst = min(100, p.thirst + 35)
+            print("You found water! Thirst +35")
+        elif item == "part":
+            p.inventory["part"] += 1
+            print("You found a ship part! Parts collected:", p.inventory["part"])
+        elif item == "scrap":
+            p.inventory["scrap"] += 1
+            print("You salvaged scrap material. (useful later)")
+
+    def rest(self):
+        p = self.world.player
+        print("You rest for a while.")
+        p.health = min(100, p.health + 8)
+        p.hunger = max(0, p.hunger - 6)
+        p.thirst = max(0, p.thirst - 8)
+
+    def fight(self, monster):
+        p = self.world.player
+        print("Combat initiated!")
+        while monster.alive and p.health > 0:
+            player_hit = random.randint(4, 12)
+            monster.health -= player_hit
+            print(f"You strike the creature for {player_hit} damage.")
+            if monster.health <= 0:
+                monster.alive = False
+                tile = self.world.tile_at(monster.x,monster.y)
+                if random.random() < 0.6:
+                    tile.items.append("scrap")
+                print("You defeated the creature!")
+                break
+            m_hit = random.randint(1, monster.attack)
+            p.health -= m_hit
+            print(f"The creature bites you for {m_hit} damage.")
+            if random.random() < 0.2:
+                print("You break away and flee!")
+               
+                dx = p.x - monster.x
+                dy = p.y - monster.y
+                step_x = 1 if dx>0 else -1 if dx<0 else 0
+                step_y = 1 if dy>0 else -1 if dy<0 else 0
+                self.move_player(step_x, step_y)
+                return
+
+    def monster_encounters(self):
+        p = self.world.player
+        tile = self.world.tile_at(p.x,p.y)
+        if tile.monster:
+            print("A monster attacks you suddenly!")
+            self.fight(tile.monster)
+
+    def attempt_assemble(self):
+        p = self.world.player
+        sx,sy = self.world.ship_coords
+        if (p.x,p.y) != (sx,sy):
+            print("You need to be at the crash site (S on the map) to assemble parts.")
+            return
+        if p.inventory["part"] >= self.world.part_goal:
+            print("You attach the final part to the ship. The engines whirr.")
+            print("CONGRATULATIONS — Milo repaired the ship and escapes Planet Caelum!")
+            self.running = False
+        else:
+            needed = self.world.part_goal - p.inventory["part"]
+            print(f"You need {needed} more parts to repair the ship.")
+
+    def check_game_over(self):
+        p = self.world.player
+        if p.health <= 0:
+            print("You have succumbed to your injuries. Game Over.")
+            self.running = False
+    
+if __name__ == "__main__":
+    random.seed()
+    g = Game()
+    try:
+        g.input_loop()
+    except KeyboardInterrupt:
+        print("\nInterrupted. Goodbye.")
+        sys.exit(0)
