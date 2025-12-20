@@ -63,4 +63,57 @@ class Player:
         return f"HP:{self.health}  Hunger:{self.hunger}  Thirst:{self.thirst}  Parts:{self.inventory['part']}  Food:{self.inventory['food']}  Water:{self.inventory['water']}"
 
 class Monster:
-    
+    def __init__(self, x, y, level=1):
+        self.x = x
+        self.y = y
+        self.health = 20 + level*10
+        self.level = level
+        self.attack = 6 + level*2
+        self.alive = True
+
+class World:
+    def __init__(self, width, height):
+        self.w = width
+        self.h = height
+        self.grid = [[Tile() for _ in range(width)] for __ in range(height)]
+        self.player = None
+        self.monsters = []
+        self.ship_coords = (width//2, height//2)  
+        self.turn = 0
+        self.part_goal = NUM_SHIP_PARTS
+
+    def generate_terrain(self):
+       
+        for y in range(self.h):
+            for x in range(self.w):
+                r = random.random()
+                if r < 0.08:
+                    self.grid[y][x].kind = "rock"
+                    self.grid[y][x].hazard = True
+                elif r < 0.14:
+                    self.grid[y][x].kind = "waterpool"
+                else:
+                    self.grid[y][x].kind = "empty"
+       
+        sx, sy = self.ship_coords
+        self.grid[sy][sx].kind = "ship"
+        self.grid[sy][sx].items.append("scrap")  
+
+    def place_player(self):
+       
+        candidates = [(0,0),(0,self.h-1),(self.w-1,0),(self.w-1,self.h-1)]
+        x,y = random.choice(candidates)
+        x = min(max(1, x + random.randint(0,2) - 1), self.w-2)
+        y = min(max(1, y + random.randint(0,2) - 1), self.h-2)
+        self.player = Player(x,y)
+
+    def scatter_items(self):
+        placed = 0
+        for _ in range(NUM_FOOD):
+            self._place_random_item("food")
+        for _ in range(NUM_WATER):
+            self._place_random_item("water")
+        for _ in range(NUM_SHIP_PARTS):
+            self._place_random_item("part")
+        for _ in range(5):
+            self._place_random_item("scrap")
