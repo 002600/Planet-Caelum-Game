@@ -231,3 +231,64 @@ class Game:
         if p.hunger <= 0:
             p.health -= 6
             print("You are starving! HP -6")
+if p.thirst <= 0:
+            p.health -= 8
+            print("You are dehydrated! HP -8")
+        tile = self.world.tile_at(p.x, p.y)
+        if tile.hazard and random.random() < 0.06:
+            p.health -= 5
+            print("The hazardous terrain scrapes you. HP -5")
+
+    def handle_command(self, cmd):
+        if cmd in ("n","north"):
+            self.move_player(0,-1)
+        elif cmd in ("s","south"):
+            self.move_player(0,1)
+        elif cmd in ("e","east"):
+            self.move_player(1,0)
+        elif cmd in ("w","west"):
+            self.move_player(-1,0)
+        elif cmd == "scavenge":
+            self.scavenge()
+        elif cmd == "rest":
+            self.rest()
+        elif cmd == "status":
+            print(self.world.player.status())
+        elif cmd == "map":
+            print(self.world.display_map())
+        elif cmd == "inventory":
+            print("Inventory:", self.world.player.inventory)
+        elif cmd == "assemble":
+            self.attempt_assemble()
+        elif cmd == "help":
+            print("Commands: n,s,e,w scavenge rest status map inventory assemble help quit")
+        elif cmd == "quit":
+            self.running = False
+            print("Quitting. Goodbye, Milo.")
+        else:
+            print("Unknown command. type 'help' for list.")
+
+    def move_player(self, dx, dy):
+        p = self.world.player
+        nx = max(0, min(self.world.w-1, p.x + dx))
+        ny = max(0, min(self.world.h-1, p.y + dy))
+        if (nx,ny) == (p.x,p.y):
+            print("Can't move that way.")
+            return
+        tile = self.world.tile_at(nx,ny)
+        cost = 1
+        if tile.kind == "rock":
+            cost = 2
+            if random.random() < 0.25:
+                # small damage
+                p.health -= 2
+                print("The rocky ground injures you. HP -2")
+        p.hunger = max(0, p.hunger - cost)
+        p.thirst = max(0, p.thirst - cost)
+        p.x = nx; p.y = ny
+        print(f"You move to ({nx},{ny}).")
+        if tile.monster:
+            print("A hostile creature is here!")
+            self.fight(tile.monster)
+
+    def scavenge(self):
